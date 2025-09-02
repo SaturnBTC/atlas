@@ -8,7 +8,7 @@ Atlas Core is a modular, high-throughput indexing pipeline. It provides the buil
 -   Filter any stream by datasource or custom logic
 -   Collect metrics and control shutdown and buffering behavior
 
-The `datasources/*` and `checkpoint-stores/*` crates in this workspace are just implementations of the traits defined in the core crate. This README focuses on the `atlas-core` crate itself: concepts, traits, and how to compose a pipeline.
+The `datasources/*` and `checkpoint-stores/*` crates in this workspace are just implementations of the traits defined in the core crate.
 
 ## Crate name and dependency
 
@@ -18,8 +18,6 @@ Inside this workspace you can depend on the core crate via the workspace depende
 [dependencies]
 atlas-core = { path = "./core" }
 ```
-
-When used from Rust code, import it as `atlas_core` (hyphens become underscores):
 
 ```rust
 use atlas_core as core;
@@ -31,7 +29,6 @@ Build only the core crate and run its tests within the workspace:
 
 ```bash
 cargo build -p atlas-core
-cargo test -p atlas-core
 ```
 
 ## Core concepts
