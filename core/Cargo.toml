@@ -1,0 +1,20 @@
+[package]
+name = "atlas-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
+thiserror = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+borsh = { workspace = true }
+
+arch_sdk = { workspace = true }
+arch_program = { workspace = true }
+
+titan-client = { workspace = true }

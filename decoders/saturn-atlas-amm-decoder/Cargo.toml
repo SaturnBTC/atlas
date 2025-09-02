@@ -1,0 +1,19 @@
+[package]
+name = "saturn-atlas-amm-decoder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+thiserror = { workspace = true }
+borsh = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+bitcoin = { workspace = true }
+
+arch_program = { workspace = true }
+arch_sdk = { workspace = true }
+
+atlas-core = { workspace = true }
+
+

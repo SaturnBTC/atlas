@@ -1,0 +1,13 @@
+[package]
+name = "atlas-rocksdb-checkpoint-store"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = { workspace = true }
+tokio = { workspace = true }
+rocksdb = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+
+atlas-core = { workspace = true }

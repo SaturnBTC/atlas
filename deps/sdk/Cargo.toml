@@ -1,0 +1,47 @@
+[package]
+name = "arch_sdk"
+version = "0.5.6"
+edition = "2021"
+description = "A Rust SDK for building applications on the Arch Network blockchain platform. Provides tools and interfaces for developing, testing, and deploying programs with native Bitcoin integration."
+license = "MIT"
+
+[dependencies]
+arch_program = { path = "../program" }
+
+bitcode = "0.6.4"
+borsh = { version = "1.5.1" }
+proptest = "1.5.0"
+serde = { version = "1.0.197" }
+sha256 = { version = "1.5.0" }
+anyhow = { version = "1", features = ["backtrace"] }
+hex = { version = "0.4.3" }
+serde_json = { version = "1.0.114" }
+bitcoincore-rpc = "0.19.0"
+bitcoin = { version = "0.32.3", features = ["serde", "rand"] }
+rand_core = { version = "0.6.4", features = ["getrandom"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "json",
+  "rustls-tls",
+  "blocking",
+] }
+indicatif = "0.17.8"
+snafu = "0.8.5"
+base64 = "0.22.1"
+bip322 = "0.0.9"
+thiserror = { version = "1.0.57" }
+termsize = "0.1.9"
+tracing = "0.1.40"
+tokio-tungstenite = "0.26.1"
+tokio = { version = "1.38.0", features = ["full", "rt-multi-thread"] }
+futures = { version = "0.3", default-features = false }
+rand = "0.8.5"
+
+libfuzzer-sys = { version = "0.4", features = ["arbitrary-derive"], optional = true }
+uuid = { version = "1.10", features = ["v4"] }
+
+[dev-dependencies]
+mockito = "1.2"
+
+[features]
+default = []
+fuzzing = ["libfuzzer-sys"]

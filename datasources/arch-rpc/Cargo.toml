@@ -1,0 +1,20 @@
+[package]
+name = "atlas-arch-rpc-datasource"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+thiserror = { workspace = true }
+futures = { workspace = true }
+tracing = { workspace = true }
+hex = { workspace = true }
+
+arch_sdk = { workspace = true }
+arch_program = { workspace = true }
+
+atlas-core = { workspace = true }
+
+titan-client = { workspace = true }
