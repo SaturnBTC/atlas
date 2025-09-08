@@ -1,7 +1,10 @@
 [package]
 name = "atlas-rollback-datasource"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+repository = "https://github.com/saturnBTC/atlas"
+license = "MIT"
+description = "Atlas datasource emitting rollback and reapply events for index refresh."
 
 [dependencies]
 async-trait = { workspace = true }

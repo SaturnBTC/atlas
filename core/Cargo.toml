@@ -1,9 +1,10 @@
 [package]
 name = "atlas-arch"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Atlas Core: a modular, high-throughput indexing pipeline for decoding and processing accounts, instructions, transactions, and block-level events."
 license = "MIT"
+repository = "https://github.com/saturnBTC/atlas"
 
 [dependencies]
 async-trait = { workspace = true }
