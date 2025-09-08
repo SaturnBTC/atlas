@@ -1,6 +1,6 @@
 use arch_program::pubkey::Pubkey;
 use arch_sdk::AccountInfo;
-use atlas_core::account::{AccountDecoder, DecodedAccount};
+use atlas_arch::account::{AccountDecoder, DecodedAccount};
 use tracing::info;
 
 use crate::mocks::{HasDiscriminator, LiquidityPoolConfig, LiquidityPoolShard, Owner, Position};

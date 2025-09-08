@@ -4,11 +4,11 @@ use std::thread;
 
 use arch_program::hash::Hash;
 use async_trait::async_trait;
-use atlas_core::datasource::{
+use atlas_arch::datasource::{
     BitcoinBlock, BitcoinDatasource, Datasource, DatasourceId, UpdateType, Updates,
 };
-use atlas_core::error::IndexerResult;
-use atlas_core::metrics::MetricsCollection;
+use atlas_arch::error::IndexerResult;
+use atlas_arch::metrics::MetricsCollection;
 use futures::future::join_all;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Sender;
@@ -187,20 +187,20 @@ impl BitcoinDatasource for TitanBitcoinTxProvider {
     async fn get_transactions(
         &self,
         txids: &[Hash],
-    ) -> IndexerResult<std::collections::HashMap<Hash, atlas_core::bitcoin::Transaction>> {
+    ) -> IndexerResult<std::collections::HashMap<Hash, atlas_arch::bitcoin::Transaction>> {
         // Fetch in parallel
         let futs = txids.iter().map(|h| {
             let txid_str = h.to_string();
             async move {
                 let parsed = bitcoin::Txid::from_str(&txid_str)
-                    .map_err(|e| atlas_core::error::Error::Custom(e.to_string()))?;
+                    .map_err(|e| atlas_arch::error::Error::Custom(e.to_string()))?;
                 use titan_client::TitanApi;
                 let tx = self
                     .client
                     .get_transaction(&parsed)
                     .await
-                    .map_err(|e| atlas_core::error::Error::Custom(e.to_string()))?;
-                Ok::<(Hash, atlas_core::bitcoin::Transaction), atlas_core::error::Error>((*h, tx))
+                    .map_err(|e| atlas_arch::error::Error::Custom(e.to_string()))?;
+                Ok::<(Hash, atlas_arch::bitcoin::Transaction), atlas_arch::error::Error>((*h, tx))
             }
         });
 

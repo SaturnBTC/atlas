@@ -144,24 +144,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "atlas-arch-rpc-datasource"
-version = "0.1.0"
-dependencies = [
- "arch_program",
- "arch_sdk",
- "async-trait",
- "atlas-core",
- "futures",
- "hex",
- "thiserror 1.0.69",
- "titan-client",
- "tokio",
- "tokio-util",
- "tracing",
-]
-
-[[package]]
-name = "atlas-core"
+name = "atlas-arch"
 version = "0.1.0"
 dependencies = [
  "arch_program",
@@ -179,13 +162,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "atlas-arch-rpc-datasource"
+version = "0.1.0"
+dependencies = [
+ "arch_program",
+ "arch_sdk",
+ "async-trait",
+ "atlas-arch",
+ "futures",
+ "hex",
+ "thiserror 1.0.69",
+ "titan-client",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "atlas-example-rollback-pipe"
 version = "0.1.0"
 dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-core",
+ "atlas-arch",
  "log",
  "serde",
  "serde_json",
@@ -200,7 +200,7 @@ name = "atlas-rocksdb-checkpoint-store"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "atlas-core",
+ "atlas-arch",
  "log",
  "rocksdb",
  "thiserror 1.0.69",
@@ -214,7 +214,7 @@ dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-core",
+ "atlas-arch",
  "futures",
  "hex",
  "thiserror 1.0.69",
@@ -231,7 +231,7 @@ dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-core",
+ "atlas-arch",
  "bitcoin",
  "futures",
  "hex",
@@ -2205,7 +2205,7 @@ version = "0.1.0"
 dependencies = [
  "arch_program",
  "arch_sdk",
- "atlas-core",
+ "atlas-arch",
  "bitcoin",
  "borsh",
  "serde",

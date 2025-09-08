@@ -12,7 +12,7 @@ resolver = "2"
 arch_program = { version = "0.5.8" }
 arch_sdk = { version = "0.5.8" }
 
-atlas-core = { path = "./core" }
+atlas-arch = { path = "./core" }
 atlas-rocksdb-checkpoint-store = { path = "./checkpoint-stores/rocksdb-store" }
 atlas-arch-rpc-datasource = { path = "./datasources/arch-rpc" }
 atlas-titan-datasource = { path = "./datasources/titan" }

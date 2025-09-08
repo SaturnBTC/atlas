@@ -2,7 +2,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use atlas_core::{error::IndexerResult, sync::CheckpointStore};
+use atlas_arch::{error::IndexerResult, sync::CheckpointStore};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options};
 
 #[derive(thiserror::Error, Debug)]
@@ -45,7 +45,7 @@ impl RocksCheckpointStore {
         let handle = self
             .db
             .cf_handle(cf)
-            .ok_or_else(|| atlas_core::error::Error::Custom("Missing stats cf".to_string()))?;
+            .ok_or_else(|| atlas_arch::error::Error::Custom("Missing stats cf".to_string()))?;
         let val = self.db.get_cf(&handle, key);
         match val {
             Ok(Some(bytes)) => {
@@ -55,7 +55,7 @@ impl RocksCheckpointStore {
                 Ok(u64::from_le_bytes(arr))
             }
             Ok(None) => Ok(0),
-            Err(e) => Err(atlas_core::error::Error::Custom(format!(
+            Err(e) => Err(atlas_arch::error::Error::Custom(format!(
                 "rocksdb get error: {}",
                 e
             ))),
@@ -66,10 +66,10 @@ impl RocksCheckpointStore {
         let handle = self
             .db
             .cf_handle(cf)
-            .ok_or_else(|| atlas_core::error::Error::Custom("Missing stats cf".to_string()))?;
+            .ok_or_else(|| atlas_arch::error::Error::Custom("Missing stats cf".to_string()))?;
         self.db
             .put_cf(&handle, key, value.to_le_bytes())
-            .map_err(|e| atlas_core::error::Error::Custom(format!("rocksdb put error: {}", e)))?;
+            .map_err(|e| atlas_arch::error::Error::Custom(format!("rocksdb put error: {}", e)))?;
         Ok(())
     }
 

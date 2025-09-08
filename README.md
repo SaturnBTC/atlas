@@ -20,7 +20,7 @@ atlas-core = { path = "./core" }
 ```
 
 ```rust
-use atlas_core as core;
+use atlas_arch as core;
 ```
 
 ## Build and test
@@ -84,8 +84,8 @@ pub trait Processor {
     async fn process(
         &mut self,
         data: Vec<Self::InputType>,
-        metrics: std::sync::Arc<atlas_core::metrics::MetricsCollection>,
-    ) -> atlas_core::error::IndexerResult<Self::OutputType>;
+        metrics: std::sync::Arc<atlas_arch::metrics::MetricsCollection>,
+    ) -> atlas_arch::error::IndexerResult<Self::OutputType>;
 }
 ```
 
@@ -115,7 +115,7 @@ Minimal example wiring a pipeline with one datasource, one instruction pipe, and
 
 ```rust
 use std::sync::Arc;
-use atlas_core as core;
+use atlas_arch as core;
 use core::pipeline::Pipeline;
 use core::datasource::{Datasource, DatasourceId, Updates, UpdateType};
 use core::instruction::{InstructionDecoder, DecodedInstruction};
@@ -187,7 +187,7 @@ async fn main() -> core::error::IndexerResult<()> {
 At a minimum, push updates through the `sender` channel supplied by `Datasource::consume`:
 
 ```rust
-use atlas_core::datasource::{Datasource, DatasourceId, Updates, AccountUpdate, UpdateType};
+use atlas_arch::datasource::{Datasource, DatasourceId, Updates, AccountUpdate, UpdateType};
 use async_trait::async_trait;
 
 struct MyDs;
@@ -198,8 +198,8 @@ impl Datasource for MyDs {
         id: DatasourceId,
         sender: tokio::sync::mpsc::Sender<(Updates, DatasourceId)>,
         cancellation: tokio_util::sync::CancellationToken,
-        _metrics: std::sync::Arc<atlas_core::metrics::MetricsCollection>,
-    ) -> atlas_core::error::IndexerResult<()> {
+        _metrics: std::sync::Arc<atlas_arch::metrics::MetricsCollection>,
+    ) -> atlas_arch::error::IndexerResult<()> {
         // example: send a batch of accounts
         let updates = Updates::Accounts(vec![/* AccountUpdate { .. } */]);
         let _ = sender.send((updates, id)).await;
@@ -216,13 +216,13 @@ impl Datasource for MyDs {
 To restrict a pipe to a particular datasource, use `filter::DatasourceFilter` with a named `DatasourceId`:
 
 ```rust
-use atlas_core::datasource::DatasourceId;
-use atlas_core::filter::DatasourceFilter;
+use atlas_arch::datasource::DatasourceId;
+use atlas_arch::filter::DatasourceFilter;
 
 let mainnet = DatasourceId::new_named("mainnet");
-let filters = vec![Box::new(DatasourceFilter::new(mainnet)) as Box<dyn atlas_core::filter::Filter + Send + Sync>];
+let filters = vec![Box::new(DatasourceFilter::new(mainnet)) as Box<dyn atlas_arch::filter::Filter + Send + Sync>];
 
-let builder = atlas_core::pipeline::Pipeline::builder()
+let builder = atlas_arch::pipeline::Pipeline::builder()
     .instruction_with_filters(MyIxDecoder, MyIxProcessor, filters);
 ```
 

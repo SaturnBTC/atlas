@@ -13,7 +13,7 @@ tokio-util = { workspace = true }
 arch_program = { workspace = true }
 arch_sdk = { workspace = true }
 
-atlas-core = { workspace = true }
+atlas-arch = { workspace = true }
 
 thiserror = { workspace = true }
 serde = { workspace = true }

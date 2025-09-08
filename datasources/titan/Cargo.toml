@@ -16,6 +16,6 @@ bitcoin = { workspace = true }
 arch_sdk = { workspace = true }
 arch_program = { workspace = true }
 
-atlas-core = { workspace = true }
+atlas-arch = { workspace = true }
 
 titan-client = { workspace = true }

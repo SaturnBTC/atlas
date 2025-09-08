@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use atlas_core::datasource::{
+use atlas_arch::datasource::{
     AccountUpdate, BlockDetails, Datasource, DatasourceId, ReappliedTransactionsEvent,
     RolledbackTransactionsEvent, TransactionUpdate, UpdateType, Updates,
 };
-use atlas_core::error::IndexerResult;
-use atlas_core::metrics::MetricsCollection;
+use atlas_arch::error::IndexerResult;
+use atlas_arch::metrics::MetricsCollection;
 use tokio::sync::mpsc::Sender;
 use tokio_util::sync::CancellationToken;
 
@@ -15,7 +15,7 @@ use arch_sdk::{AsyncArchRpcClient, BackoffStrategy, Event, EventTopic, WebSocket
 use std::str::FromStr as _;
 use tracing::error;
 
-use atlas_core::sync::LiveSource;
+use atlas_arch::sync::LiveSource;
 
 #[derive(Clone)]
 pub struct ArchLiveDatasource {
@@ -65,7 +65,7 @@ impl LiveSource for ArchLiveDatasource {
 
         // Best-effort connect and enable basic keep-alives
         if let Err(e) = client.connect().await {
-            return Err(atlas_core::error::Error::Custom(format!(
+            return Err(atlas_arch::error::Error::Custom(format!(
                 "arch_live: failed to connect websocket: {}",
                 e
             )));
@@ -108,7 +108,7 @@ impl LiveSource for ArchLiveDatasource {
             )
             .await
             .map_err(|e| {
-                atlas_core::error::Error::Custom(format!(
+                atlas_arch::error::Error::Custom(format!(
                     "arch_live: failed to subscribe ReappliedTransactions: {}",
                     e
                 ))
@@ -147,7 +147,7 @@ impl LiveSource for ArchLiveDatasource {
             )
             .await
             .map_err(|e| {
-                atlas_core::error::Error::Custom(format!(
+                atlas_arch::error::Error::Custom(format!(
                     "arch_live: failed to subscribe RolledbackTransactions: {}",
                     e
                 ))
@@ -217,7 +217,7 @@ impl LiveSource for ArchLiveDatasource {
             })
             .await
             .map_err(|e| {
-                atlas_core::error::Error::Custom(format!(
+                atlas_arch::error::Error::Custom(format!(
                     "arch_live: failed to subscribe Block: {}",
                     e
                 ))
@@ -257,7 +257,7 @@ impl LiveSource for ArchLiveDatasource {
             })
             .await
             .map_err(|e| {
-                atlas_core::error::Error::Custom(format!(
+                atlas_arch::error::Error::Custom(format!(
                     "arch_live: failed to subscribe Transaction: {}",
                     e
                 ))
@@ -300,7 +300,7 @@ impl LiveSource for ArchLiveDatasource {
             })
             .await
             .map_err(|e| {
-                atlas_core::error::Error::Custom(format!(
+                atlas_arch::error::Error::Custom(format!(
                     "arch_live: failed to subscribe AccountUpdate: {}",
                     e
                 ))

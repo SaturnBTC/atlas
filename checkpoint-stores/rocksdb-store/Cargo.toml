@@ -10,4 +10,4 @@ rocksdb = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
 
-atlas-core = { workspace = true }
+atlas-arch = { workspace = true }

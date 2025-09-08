@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use arch_program::pubkey::Pubkey;
 use async_trait::async_trait;
-use atlas_core as core;
+use atlas_arch as core;
 use core::datasource::{
     Datasource, DatasourceId, ReappliedTransactionsEvent, RolledbackTransactionsEvent, UpdateType,
     Updates,

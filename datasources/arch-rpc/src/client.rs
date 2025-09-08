@@ -5,8 +5,8 @@ use arch_sdk::{
     AccountInfo, ArchError as SdkArchError, ArchRpcClient as SdkArchRpcClient, Config, FullBlock,
 };
 use async_trait::async_trait;
-use atlas_core::datasource::AccountDatasource;
-use atlas_core::error::IndexerResult;
+use atlas_arch::datasource::AccountDatasource;
+use atlas_arch::error::IndexerResult;
 use tokio::task;
 use tracing::error;
 
@@ -158,7 +158,7 @@ impl AccountDatasource for ArchRpcClient {
         ArchRpc::get_multiple_accounts(self, &keys)
             .await
             .map_err(|e| {
-                atlas_core::error::Error::Custom(format!("arch_rpc get_multiple_accounts: {}", e))
+                atlas_arch::error::Error::Custom(format!("arch_rpc get_multiple_accounts: {}", e))
             })
     }
 }
