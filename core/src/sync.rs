@@ -104,6 +104,60 @@ pub struct SyncingDatasource {
 }
 
 impl SyncingDatasource {
+    async fn catch_up_to_current_tip(
+        &self,
+        mut last_indexed: u64,
+        sender: tokio::sync::mpsc::Sender<(Updates, DatasourceId)>,
+        cancellation_token: CancellationToken,
+        metrics: Arc<MetricsCollection>,
+        cutoff_height_value: Arc<tokio::sync::Mutex<u64>>,
+    ) -> IndexerResult<u64> {
+        // After finishing backfill to the initial snapshot tip, the chain may have advanced.
+        // Perform a final catch-up range to the latest best height to close any gap before live.
+        let best_now = self.tip.best_height().await?;
+        if best_now > last_indexed {
+            let start = last_indexed.saturating_add(1);
+            let end = best_now;
+            log::info!(
+                "sync: catch-up backfill from {} to current best {} before enabling live",
+                start,
+                end
+            );
+
+            let (bf_tx, mut bf_rx) = mpsc::channel::<(Updates, DatasourceId)>(1_000);
+            let forward_sender_clone = sender.clone();
+            let forward_handle = tokio::spawn(async move {
+                while let Some((u, ds)) = bf_rx.recv().await {
+                    let _ = forward_sender_clone.send((u, ds)).await;
+                }
+            });
+
+            self.backfill
+                .backfill_range(
+                    start,
+                    end,
+                    bf_tx,
+                    cancellation_token.clone(),
+                    metrics.clone(),
+                )
+                .await?;
+            let _ = forward_handle.await;
+
+            self.checkpoint.set_last_indexed_height(end).await?;
+            last_indexed = end;
+            metrics
+                .update_gauge("sync_last_indexed", last_indexed as f64)
+                .await?;
+
+            // Update cutoff so buffered live events at or below end are dropped on flush
+            {
+                let mut guard = cutoff_height_value.lock().await;
+                *guard = last_indexed;
+            }
+        }
+
+        Ok(last_indexed)
+    }
     pub fn new(
         tip: Arc<dyn TipSource>,
         checkpoint: Arc<dyn CheckpointStore>,
@@ -239,8 +293,6 @@ impl SyncingDatasource {
         cancellation_token: CancellationToken,
         metrics: Arc<MetricsCollection>,
         cutoff_height_value: Arc<tokio::sync::Mutex<u64>>,
-        maybe_live_tx: Option<tokio::sync::mpsc::Sender<(Updates, DatasourceId)>>,
-        live_started: Arc<AtomicBool>,
     ) -> IndexerResult<u64> {
         if last_indexed < final_target_tip {
             log::info!(
@@ -333,27 +385,8 @@ impl SyncingDatasource {
                     );
                 }
 
-                // Start live when close enough to tip, but only once
-                if let Some(live_tx) = maybe_live_tx.as_ref() {
-                    if !live_started.load(Ordering::Relaxed) {
-                        let distance = final_target_tip.saturating_sub(last_indexed);
-                        if distance <= self.config.live_start_distance {
-                            self.spawn_live_stream(
-                                last_indexed,
-                                live_tx.clone(),
-                                cancellation_token.clone(),
-                                metrics.clone(),
-                            );
-                            live_started.store(true, Ordering::Relaxed);
-                            log::info!(
-                                "sync: live stream started at height {} (distance {} <= {})",
-                                last_indexed,
-                                distance,
-                                self.config.live_start_distance
-                            );
-                        }
-                    }
-                }
+                // Live stream is started at the beginning of sync to buffer new events.
+                // We no longer defer starting live based on distance to tip here.
             }
         } else {
             log::info!(
@@ -412,7 +445,13 @@ impl Datasource for SyncingDatasource {
             cancellation_token.clone(),
             metrics.clone(),
         );
-        let live_started = Arc::new(AtomicBool::new(false));
+        // Start live immediately to buffer new events while we backfill.
+        self.spawn_live_stream(
+            last_indexed,
+            live_tx.clone(),
+            cancellation_token.clone(),
+            metrics.clone(),
+        );
 
         last_indexed = self
             .backfill_if_needed(
@@ -422,8 +461,17 @@ impl Datasource for SyncingDatasource {
                 cancellation_token.clone(),
                 metrics.clone(),
                 Arc::clone(&cutoff_height_value),
-                Some(live_tx.clone()),
-                Arc::clone(&live_started),
+            )
+            .await?;
+
+        // Before enabling passthrough, close any gap that formed while syncing to the initial snapshot tip.
+        last_indexed = self
+            .catch_up_to_current_tip(
+                last_indexed,
+                sender.clone(),
+                cancellation_token.clone(),
+                metrics.clone(),
+                Arc::clone(&cutoff_height_value),
             )
             .await?;
 
@@ -435,15 +483,7 @@ impl Datasource for SyncingDatasource {
         )
         .await?;
 
-        // If live didn't start during backfill (very short distance), start it now
-        if !live_started.load(Ordering::Relaxed) {
-            self.spawn_live_stream(
-                last_indexed,
-                live_tx,
-                cancellation_token.clone(),
-                metrics.clone(),
-            );
-        }
+        // Live already started at the beginning; no action needed here.
 
         cancellation_token.cancelled().await;
         Ok(())
