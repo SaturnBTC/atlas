@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use arch_program::pubkey::Pubkey;
 use arch_sdk::{
-    AccountInfo, ArchError as SdkArchError, ArchRpcClient as SdkArchRpcClient, FullBlock,
+    AccountInfo, ArchError as SdkArchError, ArchRpcClient as SdkArchRpcClient, Config, FullBlock,
 };
 use async_trait::async_trait;
 use atlas_core::datasource::AccountDatasource;
@@ -50,8 +50,10 @@ pub struct ArchRpcClient {
 
 impl ArchRpcClient {
     pub fn new(url: &str) -> Self {
+        let mut config = Config::localnet();
+        config.arch_node_url = url.to_string();
         Self {
-            client: SdkArchRpcClient::new(url),
+            client: SdkArchRpcClient::new(&config),
         }
     }
 }

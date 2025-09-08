@@ -1,7 +1,7 @@
 use std::{collections::HashMap, str::FromStr as _, sync::Arc};
 
 use arch_program::hash::Hash;
-use arch_sdk::{ArchError as SdkArchError, ArchRpcClient as SdkArchRpcClient};
+use arch_sdk::{ArchError as SdkArchError, ArchRpcClient as SdkArchRpcClient, Config};
 use async_trait::async_trait;
 use futures::future::join_all;
 use tokio::sync::Semaphore;
@@ -19,8 +19,10 @@ pub struct ArchRollbackClient {
 
 impl ArchRollbackClient {
     pub fn new(url: &str) -> Self {
+        let mut config = Config::localnet();
+        config.arch_node_url = url.to_string();
         Self {
-            client: SdkArchRpcClient::new(url),
+            client: SdkArchRpcClient::new(&config),
             semaphore: Arc::new(Semaphore::new(MAX_CONCURRENT_REQUESTS)),
         }
     }
