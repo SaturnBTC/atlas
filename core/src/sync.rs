@@ -205,6 +205,7 @@ impl SyncingDatasource {
         pass_through: Arc<AtomicBool>,
         cutoff_height_value: Arc<tokio::sync::Mutex<u64>>,
         forward_sender: tokio::sync::mpsc::Sender<(Updates, DatasourceId)>,
+        checkpoint: Arc<dyn CheckpointStore>,
         max_buffer: usize,
         cancellation_token: CancellationToken,
         metrics: Arc<MetricsCollection>,
@@ -215,6 +216,11 @@ impl SyncingDatasource {
         let live_metrics_forwarder = metrics;
 
         tokio::spawn(async move {
+            // Initialize last persisted height from checkpoint
+            let mut last_persisted_height: u64 = match checkpoint.last_indexed_height().await {
+                Ok(h) => h,
+                Err(_) => 0,
+            };
             let mut buffer: VecDeque<(Updates, DatasourceId)> = VecDeque::new();
             let mut flushed_after_enable = false;
             let mut live_rx = live_rx;
@@ -234,6 +240,13 @@ impl SyncingDatasource {
                                         };
                                         while let Some((mut u, ds_id)) = buffer.pop_front() {
                                             if let Some(filtered) = filter_by_cutoff(&mut u, cutoff_snapshot) {
+                                                if let Some(max_h) = max_height_in_updates(&filtered) {
+                                                    if max_h > last_persisted_height {
+                                                        let _ = checkpoint.set_last_indexed_height(max_h).await;
+                                                        let _ = live_metrics_forwarder.update_gauge("sync_last_indexed", max_h as f64).await;
+                                                        last_persisted_height = max_h;
+                                                    }
+                                                }
                                                 let _ = forward_sender.send((filtered, ds_id)).await;
                                             }
                                             let _ = live_metrics_forwarder.increment_counter("sync_live_buffer_flushed", 1).await;
@@ -246,6 +259,13 @@ impl SyncingDatasource {
                                     };
                                     let mut u = updates;
                                     if let Some(filtered) = filter_by_cutoff(&mut u, cutoff_snapshot) {
+                                        if let Some(max_h) = max_height_in_updates(&filtered) {
+                                            if max_h > last_persisted_height {
+                                                let _ = checkpoint.set_last_indexed_height(max_h).await;
+                                                let _ = live_metrics_forwarder.update_gauge("sync_last_indexed", max_h as f64).await;
+                                                last_persisted_height = max_h;
+                                            }
+                                        }
                                         let _ = forward_sender.send((filtered, datasource_id)).await;
                                     }
                                 } else {
@@ -441,6 +461,7 @@ impl Datasource for SyncingDatasource {
             Arc::clone(&pass_through),
             Arc::clone(&cutoff_height_value),
             sender.clone(),
+            Arc::clone(&self.checkpoint),
             self.config.max_live_buffer,
             cancellation_token.clone(),
             metrics.clone(),
@@ -564,5 +585,18 @@ fn filter_by_cutoff(updates: &mut Updates, cutoff_height: u64) -> Option<Updates
         Updates::ReappliedTransactions(events) => {
             Some(Updates::ReappliedTransactions(events.clone()))
         }
+    }
+}
+
+// Determine the maximum height carried by an `Updates` payload for checkpointing
+fn max_height_in_updates(updates: &Updates) -> Option<u64> {
+    match updates {
+        Updates::Transactions(txs) => txs.iter().map(|t| t.height).max(),
+        Updates::BlockDetails(blocks) => blocks.iter().map(|b| b.height).max(),
+        Updates::Accounts(accts) => accts.iter().map(|a| a.height).max(),
+        Updates::AccountDeletions(dels) => dels.iter().map(|d| d.height).max(),
+        Updates::BitcoinBlocks(blocks) => blocks.iter().map(|b| b.block_height).max(),
+        Updates::RolledbackTransactions(_) => None,
+        Updates::ReappliedTransactions(_) => None,
     }
 }
