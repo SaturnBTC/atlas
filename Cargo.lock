@@ -205,7 +205,7 @@ version = "0.1.2"
 name = "atlas-proc-macros"
 version = "0.1.2"
 dependencies = [
- "borsh-derive-internal",
+ "borsh-derive-internal-satellite",
  "hex",
  "proc-macro2",
  "quote",
@@ -515,10 +515,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "borsh-derive-internal"
-version = "0.10.4"
+name = "borsh-derive-internal-satellite"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65d6ba50644c98714aa2a70d13d7df3cd75cd2b523a2b452bf010443800976b3"
+checksum = "996ac35ecdc9995ca77355f4ad93d4ff5d4d49215e8155ecc863d1be43bfe8ef"
 dependencies = [
  "proc-macro2",
  "quote",

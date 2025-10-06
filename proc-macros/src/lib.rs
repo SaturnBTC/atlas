@@ -43,7 +43,7 @@
 //! functionality of `atlas_macros`, please consider submitting a pull request
 //! or opening an issue on the project’s GitHub repository.
 use {
-    borsh_derive_internal::*,
+    borsh_derive_internal_satellite::*,
     proc_macro::TokenStream,
     proc_macro2::{Span, TokenStream as TokenStream2},
     quote::{format_ident, quote},
@@ -135,7 +135,7 @@ pub fn atlas_deserialize_derive(input_token_stream: TokenStream) -> TokenStream 
         #deser
 
         #[automatically_derived]
-        impl atlas_core::deserialize::AtlasDeserialize for #name {
+        impl atlas_arch::deserialize::AtlasDeserialize for #name {
             const DISCRIMINATOR: &'static [u8] = #discriminator;
 
             fn deserialize(data: &[u8]) -> Option<Self> {
@@ -148,10 +148,10 @@ pub fn atlas_deserialize_derive(input_token_stream: TokenStream) -> TokenStream 
                     return None;
                 }
 
-                 match atlas_core::borsh::BorshDeserialize::deserialize(&mut rest) {
+                 match atlas_arch::borsh::BorshDeserialize::deserialize(&mut rest) {
                     Ok(res) => {
                         if !rest.is_empty() {
-                            atlas_core::log::debug!(
+                            atlas_arch::log::debug!(
                                 "Not all bytes were read when deserializing {}: {} bytes remaining",
                                 stringify!(#name),
                                 rest.len(),
@@ -664,7 +664,7 @@ pub fn instruction_decoder_collection(input: TokenStream) -> TokenStream {
 
         parse_instruction_arms.push(quote! {
             if let Some(decoded_instruction) = #decoder_expr.decode_instruction(&instruction) {
-                return Some(atlas_core::instruction::DecodedInstruction {
+                return Some(atlas_arch::instruction::DecodedInstruction {
                     program_id: instruction.program_id,
                     accounts: instruction.accounts.clone(),
                     data: #instructions_enum_name::#program_variant(decoded_instruction.data),
@@ -695,12 +695,12 @@ pub fn instruction_decoder_collection(input: TokenStream) -> TokenStream {
             #(#program_variants),*
         }
 
-        impl atlas_core::collection::InstructionDecoderCollection for #instructions_enum_name {
+        impl atlas_arch::collection::InstructionDecoderCollection for #instructions_enum_name {
             type InstructionType = #instruction_types_enum_name;
 
             fn parse_instruction(
                 instruction: &solana_instruction::Instruction
-            ) -> Option<atlas_core::instruction::DecodedInstruction<Self>> {
+            ) -> Option<atlas_arch::instruction::DecodedInstruction<Self>> {
                 #(#parse_instruction_arms)*
                 None
             }
