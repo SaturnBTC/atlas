@@ -17,6 +17,8 @@ version = "0.1.2"
 arch_program = { version = "0.5.8" }
 arch_sdk = { version = "0.5.8" }
 
+borsh-derive-internal-satellite = { version = "0.11.0" }
+
 atlas-arch = { version = "0.1.2", path = "./core" }
 atlas-macros = { version = "0.1.2", path = "./macros" }
 atlas-proc-macros = { version = "0.1.2", path = "./proc-macros" }
@@ -45,7 +47,6 @@ serde = { version = "1.0.198", features = ["derive"] }
 serde_json = "1.0.116"
 hex = "0.4.3"
 tracing = "0.1.40"
-borsh-derive-internal = "0.10.3"
 proc-macro2 = "1"
 quote = "1.0"
 syn = { version = "1.0", features = ["full"] }

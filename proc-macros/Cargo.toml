@@ -10,7 +10,7 @@ readme = "README.md"
 proc-macro = true
 
 [dependencies]
-borsh-derive-internal = { workspace = true }
+borsh-derive-internal-satellite = { workspace = true }
 hex = { workspace = true }
 proc-macro2 = { workspace = true }
 quote = { workspace = true }
