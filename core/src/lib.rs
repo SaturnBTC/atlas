@@ -17,3 +17,12 @@ pub mod schema;
 pub mod sync;
 pub mod transaction;
 pub mod transformers;
+
+#[cfg(feature = "macros")]
+pub use atlas_macros::*;
+#[cfg(feature = "macros")]
+pub use atlas_proc_macros::*;
+pub use borsh;
+#[cfg(feature = "macros")]
+#[doc(hidden)]
+pub use log;

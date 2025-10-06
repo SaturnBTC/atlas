@@ -3,6 +3,8 @@ members = [
     "checkpoint-stores/*",
     "datasources/*",
     "core",
+    "macros",
+    "proc-macros",
     "decoders/*",
     "examples/*",
 ]
@@ -13,11 +15,12 @@ arch_program = { version = "0.5.8" }
 arch_sdk = { version = "0.5.8" }
 
 atlas-arch = { version = "0.1.1" }
+atlas-macros = { path = "./macros" }
+atlas-proc-macros = { path = "./proc-macros" }
 atlas-rocksdb-checkpoint-store = { path = "./checkpoint-stores/rocksdb-store" }
 atlas-arch-rpc-datasource = { path = "./datasources/arch-rpc" }
 atlas-titan-datasource = { path = "./datasources/titan" }
 atlas-rollback-datasource = { path = "./datasources/rollback" }
-
 
 async-trait = "0.1.87"
 borsh = { version = "1.4.0", features = ["derive"] }
@@ -39,5 +42,9 @@ serde = { version = "1.0.198", features = ["derive"] }
 serde_json = "1.0.116"
 hex = "0.4.3"
 tracing = "0.1.40"
+borsh-derive-internal = "0.10.3"
+proc-macro2 = "1"
+quote = "1.0"
+syn = { version = "1.0", features = ["full"] }
 
 titan-client = { version = "0.1.46", features = ["tcp_client"] }
