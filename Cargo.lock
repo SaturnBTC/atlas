@@ -145,7 +145,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-arch"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -165,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-arch-rpc-datasource"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -199,11 +199,11 @@ dependencies = [
 
 [[package]]
 name = "atlas-macros"
-version = "0.1.2"
+version = "0.1.3"
 
 [[package]]
 name = "atlas-proc-macros"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "borsh-derive-internal-satellite",
  "hex",
@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-rocksdb-checkpoint-store"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "async-trait",
  "atlas-arch",
@@ -227,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-rollback-datasource"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -244,7 +244,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-titan-datasource"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -2230,7 +2230,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "saturn-atlas-amm-decoder"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "arch_program",
  "arch_sdk",
