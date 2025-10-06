@@ -1,6 +1,6 @@
 [package]
 name = "atlas-arch"
-version = "0.1.1"
+version.workspace = true
 edition = "2021"
 description = "Atlas Core: a modular, high-throughput indexing pipeline for decoding and processing accounts, instructions, transactions, and block-level events."
 license = "MIT"

@@ -145,7 +145,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-arch"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -164,33 +164,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "atlas-arch"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8b07dcaf005cec62fe0ab9bbf6220ebadf328d1717cc9d9d305f78c97ac5a28"
-dependencies = [
- "arch_program",
- "arch_sdk",
- "async-trait",
- "borsh",
- "log",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "titan-client",
- "tokio",
- "tokio-util",
- "uuid",
-]
-
-[[package]]
 name = "atlas-arch-rpc-datasource"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-arch 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "atlas-arch",
  "futures",
  "hex",
  "thiserror 1.0.69",
@@ -207,7 +187,7 @@ dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-arch 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "atlas-arch",
  "log",
  "serde",
  "serde_json",
@@ -219,11 +199,11 @@ dependencies = [
 
 [[package]]
 name = "atlas-macros"
-version = "0.1.1"
+version = "0.1.2"
 
 [[package]]
 name = "atlas-proc-macros"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "borsh-derive-internal",
  "hex",
@@ -235,10 +215,10 @@ dependencies = [
 
 [[package]]
 name = "atlas-rocksdb-checkpoint-store"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "async-trait",
- "atlas-arch 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "atlas-arch",
  "log",
  "rocksdb",
  "thiserror 1.0.69",
@@ -247,12 +227,12 @@ dependencies = [
 
 [[package]]
 name = "atlas-rollback-datasource"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-arch 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "atlas-arch",
  "futures",
  "hex",
  "thiserror 1.0.69",
@@ -264,12 +244,12 @@ dependencies = [
 
 [[package]]
 name = "atlas-titan-datasource"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "arch_program",
  "arch_sdk",
  "async-trait",
- "atlas-arch 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "atlas-arch",
  "bitcoin",
  "futures",
  "hex",
@@ -2250,11 +2230,11 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "saturn-atlas-amm-decoder"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "arch_program",
  "arch_sdk",
- "atlas-arch 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "atlas-arch",
  "bitcoin",
  "borsh",
  "serde",

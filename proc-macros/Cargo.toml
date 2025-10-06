@@ -1,6 +1,6 @@
 [package]
 name = "atlas-proc-macros"
-version = "0.1.1"
+version.workspace = true
 edition = "2021"
 description = "Procedural macros for Atlas"
 license = "MIT"

@@ -10,17 +10,20 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+version = "0.1.2"
+
 [workspace.dependencies]
 arch_program = { version = "0.5.8" }
 arch_sdk = { version = "0.5.8" }
 
-atlas-arch = { version = "0.1.1" }
-atlas-macros = { path = "./macros" }
-atlas-proc-macros = { path = "./proc-macros" }
-atlas-rocksdb-checkpoint-store = { path = "./checkpoint-stores/rocksdb-store" }
-atlas-arch-rpc-datasource = { path = "./datasources/arch-rpc" }
-atlas-titan-datasource = { path = "./datasources/titan" }
-atlas-rollback-datasource = { path = "./datasources/rollback" }
+atlas-arch = { version = "0.1.2", path = "./core" }
+atlas-macros = { version = "0.1.2", path = "./macros" }
+atlas-proc-macros = { version = "0.1.2", path = "./proc-macros" }
+atlas-rocksdb-checkpoint-store = { version = "0.1.2", path = "./checkpoint-stores/rocksdb-store" }
+atlas-arch-rpc-datasource = { version = "0.1.2", path = "./datasources/arch-rpc" }
+atlas-titan-datasource = { version = "0.1.2", path = "./datasources/titan" }
+atlas-rollback-datasource = { version = "0.1.2", path = "./datasources/rollback" }
 
 async-trait = "0.1.87"
 borsh = { version = "1.4.0", features = ["derive"] }
