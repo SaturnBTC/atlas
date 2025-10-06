@@ -6,6 +6,10 @@ description = "Atlas Core: a modular, high-throughput indexing pipeline for deco
 license = "MIT"
 repository = "https://github.com/saturnBTC/atlas"
 
+[features]
+default = ["macros"]
+macros = ["atlas-macros", "atlas-proc-macros"]
+
 [dependencies]
 async-trait = { workspace = true }
 tokio = { workspace = true }
@@ -21,3 +25,6 @@ arch_sdk = { workspace = true }
 arch_program = { workspace = true }
 
 titan-client = { workspace = true }
+
+atlas-proc-macros = { workspace = true, optional = true }
+atlas-macros = { workspace = true, optional = true }

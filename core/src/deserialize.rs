@@ -11,7 +11,7 @@ use borsh::BorshDeserialize;
 /// Implement for account or instruction data that begins with a static
 /// discriminator. `deserialize` should validate and strip the discriminator
 /// before deserializing the remaining bytes.
-pub trait IndexerDeserialize
+pub trait AtlasDeserialize
 where
     Self: Sized + BorshDeserialize,
 {

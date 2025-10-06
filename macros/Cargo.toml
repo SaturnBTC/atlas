@@ -1,0 +1,12 @@
+[package]
+name = "atlas-macros"
+version = "0.1.1"
+edition = "2021"
+description = "Macros for Atlas"
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+
+[lib]
+crate-type = ["rlib"]
