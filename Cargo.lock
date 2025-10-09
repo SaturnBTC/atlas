@@ -67,10 +67,11 @@ dependencies = [
 
 [[package]]
 name = "arch_program"
-version = "0.5.8"
+version = "0.5.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2260ffb62964996663287e7f1a527b23ed47ef57464eda3c22ff8d8b6703e22b"
+checksum = "2a4d54a2139ac813c3d3abd30742b3d95752e2c52d2d30039b9d21d35063f591"
 dependencies = [
+ "base64 0.22.1",
  "bincode",
  "bitcode",
  "bitcoin",
@@ -96,9 +97,9 @@ dependencies = [
 
 [[package]]
 name = "arch_sdk"
-version = "0.5.8"
+version = "0.5.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59b7ba7358a861fc80c06923631a0da99d8b20bce49002ed49e1b5279a1dd140"
+checksum = "c80d594e85b1c10e6faedccfdf81f8b593a693806acffddef4df3c25d991cdf1"
 dependencies = [
  "anyhow",
  "arch_program",
@@ -120,6 +121,7 @@ dependencies = [
  "sha256",
  "snafu",
  "thiserror 1.0.69",
+ "titan-client",
  "tokio",
  "tokio-tungstenite",
  "tracing",
@@ -145,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-arch"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -165,7 +167,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-arch-rpc-datasource"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -199,11 +201,11 @@ dependencies = [
 
 [[package]]
 name = "atlas-macros"
-version = "0.1.3"
+version = "0.1.4"
 
 [[package]]
 name = "atlas-proc-macros"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "borsh-derive-internal-satellite",
  "hex",
@@ -215,7 +217,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-rocksdb-checkpoint-store"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "async-trait",
  "atlas-arch",
@@ -227,7 +229,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-rollback-datasource"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -244,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "atlas-titan-datasource"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -2230,7 +2232,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "saturn-atlas-amm-decoder"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "arch_program",
  "arch_sdk",
@@ -2729,9 +2731,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "titan-client"
-version = "0.1.46"
+version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b6efe2d96d20c0efcb1c5c7d6d41c98da9acd46df3e7a5ece84c46bc56e9d88"
+checksum = "a6cf5ef0c18124f187a8b18a5a29937a5f46012dea11143925694fdea5ee87a8"
 dependencies = [
  "async-trait",
  "bitcoin",
@@ -2749,9 +2751,9 @@ dependencies = [
 
 [[package]]
 name = "titan-types"
-version = "0.1.29"
+version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b9fec26f1d0fb0d7c895239b2e0e79ecc2f4cf18725ec6896476580e53a754c"
+checksum = "acd41b20e33ff1ecb13726da0507df4a40f3888bf9271e6b7d78544ed940f7a7"
 dependencies = [
  "bitcoin",
  "bitcoincore-rpc",
