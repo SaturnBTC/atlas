@@ -16,7 +16,7 @@ use crate::{
     filter::Filter,
     instruction::{
         InstructionDecoder, InstructionPipe, InstructionPipes, InstructionProcessorInputType,
-        Instructions,
+        InstructionsWithMetadata, NestedInstruction, NestedInstructions,
     },
     metrics::{Metrics, MetricsCollection},
     processor::Processor,
@@ -257,9 +257,9 @@ impl Pipeline {
             }
             Updates::Transactions(transaction_updates) => {
                 // Prepare all instructions for instruction pipes
-                let mut all_instructions: Vec<arch_program::instruction::Instruction> = Vec::new();
+                let mut all_instructions: Vec<NestedInstruction> = Vec::new();
                 // For transaction pipes we need to store instruction vectors to keep slices alive
-                let mut instructions_storage: Vec<crate::instruction::Instructions> = Vec::new();
+                let mut instructions_storage: Vec<NestedInstructions> = Vec::new();
 
                 // Also collect corresponding metadatas in parallel for convenience
                 let mut metadatas: Vec<Arc<crate::transaction::TransactionMetadata>> = Vec::new();
@@ -303,32 +303,34 @@ impl Pipeline {
                     }
 
                     let transaction_metadata = Arc::new(metadata);
-                    let instructions: Instructions =
+                    let instructions_with_metadata: InstructionsWithMetadata =
                         transformers::extract_instructions_with_metadata(
                             &transaction_metadata,
                             transaction_update,
                         )?;
 
+                    let nested_instructions: NestedInstructions =
+                        instructions_with_metadata.clone().into();
+
                     // Accumulate for instruction pipes
-                    all_instructions.extend(instructions.clone().into_iter());
+                    all_instructions.extend(nested_instructions.clone().into_iter());
 
                     // Store for transaction pipes; keep backing storage around
                     metadatas.push(transaction_metadata);
-                    instructions_storage.push(instructions);
+                    instructions_storage.push(nested_instructions);
                 }
 
                 // Run instruction pipes with filtered batches
                 for pipe in self.instruction_pipes.iter_mut() {
-                    let filtered_instructions: Vec<arch_program::instruction::Instruction> =
-                        all_instructions
-                            .iter()
-                            .cloned()
-                            .filter(|ix| {
-                                pipe.filters()
-                                    .iter()
-                                    .all(|filter| filter.filter_instruction(&datasource_id, ix))
-                            })
-                            .collect();
+                    let filtered_instructions: Vec<NestedInstruction> = all_instructions
+                        .iter()
+                        .cloned()
+                        .filter(|ix| {
+                            pipe.filters()
+                                .iter()
+                                .all(|filter| filter.filter_instruction(&datasource_id, ix))
+                        })
+                        .collect();
                     if !filtered_instructions.is_empty() {
                         pipe.run(&filtered_instructions, self.metrics.clone())
                             .await?;
@@ -339,7 +341,7 @@ impl Pipeline {
                 for pipe in self.transaction_pipes.iter_mut() {
                     let mut batch: Vec<(
                         Arc<crate::transaction::TransactionMetadata>,
-                        &[arch_program::instruction::Instruction],
+                        &[NestedInstruction],
                     )> = Vec::new();
 
                     for (idx, transaction_metadata) in metadatas.iter().enumerate() {
@@ -351,7 +353,7 @@ impl Pipeline {
                                 instructions,
                             )
                         }) {
-                            let slice: &[arch_program::instruction::Instruction] = &instructions;
+                            let slice: &[NestedInstruction] = &instructions;
                             batch.push((transaction_metadata.clone(), slice));
                         }
                     }
