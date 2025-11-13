@@ -67,9 +67,9 @@ dependencies = [
 
 [[package]]
 name = "arch_program"
-version = "0.5.13"
+version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a4d54a2139ac813c3d3abd30742b3d95752e2c52d2d30039b9d21d35063f591"
+checksum = "f7ce0c4ff38788e0af531ea64093121c45451e0da79d35b5bf511aff680d58cb"
 dependencies = [
  "base64 0.22.1",
  "bincode",
@@ -97,9 +97,9 @@ dependencies = [
 
 [[package]]
 name = "arch_sdk"
-version = "0.5.13"
+version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c80d594e85b1c10e6faedccfdf81f8b593a693806acffddef4df3c25d991cdf1"
+checksum = "573ea60ff40739f1776905f7f662ebcf2f542844c7838e23d714cb8963eaf0c5"
 dependencies = [
  "anyhow",
  "arch_program",
