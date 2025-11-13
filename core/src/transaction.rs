@@ -1,11 +1,12 @@
-use crate::error::IndexerResult;
 use crate::filter::Filter;
-use arch_program::instruction::Instruction;
+use crate::instruction::{DecodedInstruction, InstructionMetadata};
+use crate::transformers::unnest_parsed_instructions;
+use crate::{error::IndexerResult, instruction::NestedInstruction};
 use arch_program::sanitized::ArchMessage;
 
 use arch_program::pubkey::Pubkey;
 pub use arch_sdk::Signature;
-use arch_sdk::{RollbackStatus, Status};
+use arch_sdk::{InnerInstructionsList, RollbackStatus, Status};
 use {
     crate::{
         collection::InstructionDecoderCollection,
@@ -30,6 +31,7 @@ pub struct TransactionMetadata {
     pub block_height: u64,
     pub bitcoin_txid: Option<String>,
     pub bitcoin_tx: Option<crate::bitcoin::Transaction>,
+    pub inner_instructions_list: InnerInstructionsList,
 }
 
 impl TryFrom<crate::datasource::TransactionUpdate> for TransactionMetadata {
@@ -56,13 +58,14 @@ impl TryFrom<crate::datasource::TransactionUpdate> for TransactionMetadata {
             block_height: value.height,
             bitcoin_txid: value.transaction.bitcoin_txid.map(|txid| txid.to_string()),
             bitcoin_tx: None,
+            inner_instructions_list: value.transaction.inner_instructions_list,
         })
     }
 }
 
 pub type TransactionProcessorInputType<T, U = ()> = (
     Arc<TransactionMetadata>,
-    Vec<ParsedInstruction<T>>,
+    Vec<(InstructionMetadata, DecodedInstruction<T>)>,
     Option<U>,
 );
 
@@ -116,18 +119,23 @@ impl<T: InstructionDecoderCollection, U> TransactionPipe<T, U> {
 }
 
 pub fn parse_instructions<T: InstructionDecoderCollection>(
-    nested_ixs: &[Instruction],
+    nested_ixs: &[NestedInstruction],
 ) -> Vec<ParsedInstruction<T>> {
     log::trace!("parse_instructions(nested_ixs: {:?})", nested_ixs);
 
     let mut parsed_instructions: Vec<ParsedInstruction<T>> = Vec::new();
 
     for nested_ix in nested_ixs {
-        if let Some(instruction) = T::parse_instruction(nested_ix) {
+        if let Some(instruction) = T::parse_instruction(&nested_ix.instruction) {
             parsed_instructions.push(ParsedInstruction {
-                program_id: nested_ix.program_id,
+                program_id: nested_ix.instruction.program_id,
                 instruction,
+                inner_instructions: parse_instructions(&nested_ix.inner_instructions),
             });
+        } else {
+            for inner_ix in nested_ix.inner_instructions.iter() {
+                parsed_instructions.extend(parse_instructions(&[inner_ix.clone()]));
+            }
         }
     }
 
@@ -143,7 +151,7 @@ pub fn parse_instructions<T: InstructionDecoderCollection>(
 pub trait TransactionPipes<'a>: Send + Sync {
     async fn run(
         &mut self,
-        transactions: Vec<(Arc<TransactionMetadata>, &[Instruction])>,
+        transactions: Vec<(Arc<TransactionMetadata>, &[NestedInstruction])>,
         metrics: Arc<MetricsCollection>,
     ) -> IndexerResult<()>;
 
@@ -158,7 +166,7 @@ where
 {
     async fn run(
         &mut self,
-        transactions: Vec<(Arc<TransactionMetadata>, &[Instruction])>,
+        transactions: Vec<(Arc<TransactionMetadata>, &[NestedInstruction])>,
         metrics: Arc<MetricsCollection>,
     ) -> IndexerResult<()> {
         log::trace!(
@@ -169,8 +177,20 @@ where
         let mut processed_transactions: Vec<TransactionProcessorInputType<T, U>> = Vec::new();
         for (transaction_metadata, instructions) in transactions {
             let parsed_instructions = parse_instructions(instructions);
+
+            let unnested_instructions = unnest_parsed_instructions(
+                transaction_metadata.clone(),
+                parsed_instructions.clone(),
+                0,
+                vec![],
+            );
+
             let matched_data = self.matches_schema(&parsed_instructions);
-            processed_transactions.push((transaction_metadata, parsed_instructions, matched_data));
+            processed_transactions.push((
+                transaction_metadata,
+                unnested_instructions,
+                matched_data,
+            ));
         }
         self.processor
             .process(processed_transactions, metrics)

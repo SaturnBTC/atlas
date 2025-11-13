@@ -1,4 +1,3 @@
-use arch_program::instruction::Instruction;
 use arch_sdk::AccountInfo;
 
 use crate::{
@@ -7,7 +6,7 @@ use crate::{
         AccountDeletion, BitcoinBlock, BlockDetails, DatasourceId, ReappliedTransactionsEvent,
         RolledbackTransactionsEvent,
     },
-    instruction::Instructions,
+    instruction::{NestedInstruction, NestedInstructions},
     transaction::TransactionMetadata,
 };
 
@@ -24,7 +23,7 @@ pub trait Filter {
     fn filter_instruction(
         &self,
         _datasource_id: &DatasourceId,
-        _instruction: &Instruction,
+        _nested_instruction: &NestedInstruction,
     ) -> bool {
         true
     }
@@ -33,7 +32,7 @@ pub trait Filter {
         &self,
         _datasource_id: &DatasourceId,
         _transaction_metadata: &TransactionMetadata,
-        _instructions: &Instructions,
+        _nested_instructions: &NestedInstructions,
     ) -> bool {
         true
     }
@@ -106,7 +105,7 @@ impl Filter for DatasourceFilter {
     fn filter_instruction(
         &self,
         datasource_id: &DatasourceId,
-        _nested_instruction: &Instruction,
+        _nested_instruction: &NestedInstruction,
     ) -> bool {
         self.allowed_datasources.contains(datasource_id)
     }
@@ -115,7 +114,7 @@ impl Filter for DatasourceFilter {
         &self,
         datasource_id: &DatasourceId,
         _transaction_metadata: &TransactionMetadata,
-        _instructions: &Instructions,
+        _nested_instructions: &NestedInstructions,
     ) -> bool {
         self.allowed_datasources.contains(datasource_id)
     }
