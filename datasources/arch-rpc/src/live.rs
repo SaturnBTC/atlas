@@ -32,52 +32,97 @@ impl ArchLiveDatasource {
             id,
         }
     }
-}
 
-#[async_trait]
-impl LiveSource for ArchLiveDatasource {
-    async fn consume_live(
-        &self,
-        _start_from_height_exclusive: u64,
-        sender: Sender<(Updates, DatasourceId)>,
-        cancellation_token: CancellationToken,
-        metrics: Arc<MetricsCollection>,
-    ) -> IndexerResult<()> {
-        let mut client = WebSocketClient::new(&self.websocket_url);
-
+    /// Sets up the WebSocket client with auto-reconnect enabled
+    async fn setup_websocket_client(&self) -> WebSocketClient {
+        let client = WebSocketClient::new(&self.websocket_url);
         // Enable auto-reconnect with exponential backoff (infinite attempts)
-        client
+        let _ = client
             .set_reconnect_options(true, BackoffStrategy::default_exponential(), 0)
             .await;
+        client
+    }
 
-        // Track connection state in metrics
+    /// Sets up the connection change handler to track reconnections and update metrics
+    async fn setup_connection_handler(
+        client: &mut WebSocketClient,
+        metrics: Arc<MetricsCollection>,
+        reconnection_notifier: tokio::sync::mpsc::Sender<()>,
+    ) {
+        let was_connected = Arc::new(std::sync::Mutex::new(false));
+        let is_first_connection = Arc::new(std::sync::Mutex::new(true));
         let metrics_conn = metrics.clone();
+        let notifier = reconnection_notifier.clone();
+
         client
             .on_connection_change(move |connected| {
                 let metrics = metrics_conn.clone();
+                let notifier = notifier.clone();
+                let was_connected = was_connected.clone();
+                let is_first_connection = is_first_connection.clone();
+
+                // Check if this is a reconnection (transition from disconnected to connected, but not the first connection)
+                let is_reconnection = {
+                    let mut was = was_connected.lock().unwrap();
+                    let mut is_first = is_first_connection.lock().unwrap();
+                    let prev = *was;
+                    *was = connected;
+
+                    if *is_first && connected {
+                        // First connection - don't treat as reconnection
+                        *is_first = false;
+                        false
+                    } else {
+                        // Subsequent connections - check if transitioning from disconnected to connected
+                        !prev && connected
+                    }
+                };
+
                 tokio::spawn(async move {
                     let _ = metrics
                         .update_gauge("arch_live_connected", if connected { 1.0 } else { 0.0 })
                         .await;
+
+                    // Send reconnection notification if this is a reconnection
+                    if is_reconnection {
+                        let _ = notifier.send(()).await;
+                    }
                 });
             })
             .await;
+    }
 
-        // Best-effort connect and enable basic keep-alives
-        if let Err(e) = client.connect().await {
-            return Err(atlas_arch::error::Error::Custom(format!(
+    /// Connects the WebSocket client and enables keep-alive
+    async fn connect_websocket(
+        client: &mut WebSocketClient,
+        metrics: &Arc<MetricsCollection>,
+    ) -> IndexerResult<()> {
+        client.connect().await.map_err(|e| {
+            atlas_arch::error::Error::Custom(format!(
                 "arch_live: failed to connect websocket: {}",
                 e
-            )));
-        }
+            ))
+        })?;
+
         let _ = client
             .enable_keep_alive(std::time::Duration::from_secs(15))
             .await;
         metrics.update_gauge("arch_live_connected", 1.0).await.ok();
 
-        let live_id = self.id.clone();
+        Ok(())
+    }
+
+    /// Subscribes to ReappliedTransactions events
+    async fn subscribe_reapplied_transactions(
+        client: &mut WebSocketClient,
+        sender: Sender<(Updates, DatasourceId)>,
+        id: DatasourceId,
+        metrics: Arc<MetricsCollection>,
+    ) -> IndexerResult<()> {
         let sender_reapplied = sender.clone();
         let metrics_reapplied = metrics.clone();
+        let live_id = id.clone();
+
         client
             .on_event_async(
                 EventTopic::ReappliedTransactions,
@@ -112,11 +157,20 @@ impl LiveSource for ArchLiveDatasource {
                     "arch_live: failed to subscribe ReappliedTransactions: {}",
                     e
                 ))
-            })?;
+            })
+    }
 
-        let live_id = self.id.clone();
+    /// Subscribes to RolledbackTransactions events
+    async fn subscribe_rolledback_transactions(
+        client: &mut WebSocketClient,
+        sender: Sender<(Updates, DatasourceId)>,
+        id: DatasourceId,
+        metrics: Arc<MetricsCollection>,
+    ) -> IndexerResult<()> {
         let sender_rolledback = sender.clone();
         let metrics_rolledback = metrics.clone();
+        let live_id = id.clone();
+
         client
             .on_event_async(
                 EventTopic::RolledbackTransactions,
@@ -151,13 +205,22 @@ impl LiveSource for ArchLiveDatasource {
                     "arch_live: failed to subscribe RolledbackTransactions: {}",
                     e
                 ))
-            })?;
+            })
+    }
 
-        // Block events → fetch full block and emit BlockDetails + Transactions
-        let live_id = self.id.clone();
+    /// Subscribes to Block events and fetches full block details
+    async fn subscribe_block_events(
+        client: &mut WebSocketClient,
+        sender: Sender<(Updates, DatasourceId)>,
+        id: DatasourceId,
+        metrics: Arc<MetricsCollection>,
+        rpc_client: AsyncArchRpcClient,
+    ) -> IndexerResult<()> {
         let sender_block = sender.clone();
         let metrics_block = metrics.clone();
-        let rpc_block = self.rpc_client.clone();
+        let live_id = id.clone();
+        let rpc_block = rpc_client.clone();
+
         client
             .on_event_async(EventTopic::Block, None, move |event: Event| {
                 let sender = sender_block.clone();
@@ -221,53 +284,22 @@ impl LiveSource for ArchLiveDatasource {
                     "arch_live: failed to subscribe Block: {}",
                     e
                 ))
-            })?;
-
-        // Transaction events → fetch processed tx; height unknown (0)
-        let live_id = self.id.clone();
-        let sender_tx = sender.clone();
-        let metrics_tx = metrics.clone();
-        let rpc_tx = self.rpc_client.clone();
-        client
-            .on_event_async(EventTopic::Transaction, None, move |event: Event| {
-                let sender = sender_tx.clone();
-                let id = live_id.clone();
-                let metrics = metrics_tx.clone();
-                let rpc = rpc_tx.clone();
-                async move {
-                    if let Event::Transaction(te) = event {
-                        if let Ok(Some(tx)) = rpc.get_processed_transaction(&te.hash).await {
-                            tracing::info!(
-                                "Transaction processed: {:?} from tx {}",
-                                te.hash,
-                                te.block_height
-                            );
-
-                            let update = TransactionUpdate {
-                                transaction: tx,
-                                height: te.block_height,
-                            };
-                            let _ = sender.send((Updates::Transactions(vec![update]), id)).await;
-                            let _ = metrics
-                                .increment_counter("arch_live_transaction_events", 1)
-                                .await;
-                        }
-                    }
-                }
             })
-            .await
-            .map_err(|e| {
-                atlas_arch::error::Error::Custom(format!(
-                    "arch_live: failed to subscribe Transaction: {}",
-                    e
-                ))
-            })?;
+    }
 
-        // AccountUpdate events → fetch account info
-        let live_id = self.id.clone();
+    /// Subscribes to AccountUpdate events and fetches account info
+    async fn subscribe_account_updates(
+        client: &mut WebSocketClient,
+        sender: Sender<(Updates, DatasourceId)>,
+        id: DatasourceId,
+        metrics: Arc<MetricsCollection>,
+        rpc_client: AsyncArchRpcClient,
+    ) -> IndexerResult<()> {
         let sender_acct = sender.clone();
         let metrics_acct = metrics.clone();
-        let rpc_acct = self.rpc_client.clone();
+        let live_id = id.clone();
+        let rpc_acct = rpc_client.clone();
+
         client
             .on_event_async(EventTopic::AccountUpdate, None, move |event: Event| {
                 let sender = sender_acct.clone();
@@ -304,12 +336,77 @@ impl LiveSource for ArchLiveDatasource {
                     "arch_live: failed to subscribe AccountUpdate: {}",
                     e
                 ))
-            })?;
+            })
+    }
 
-        // Wait for cancellation and then close the client
+    /// Waits for cancellation signal and cleans up the WebSocket connection
+    async fn wait_for_cancellation(
+        client: &mut WebSocketClient,
+        cancellation_token: CancellationToken,
+        metrics: &Arc<MetricsCollection>,
+    ) {
         cancellation_token.cancelled().await;
         let _ = client.close().await;
         metrics.update_gauge("arch_live_connected", 0.0).await.ok();
+    }
+}
+
+#[async_trait]
+impl LiveSource for ArchLiveDatasource {
+    async fn consume_live(
+        &self,
+        _start_from_height_exclusive: u64,
+        sender: Sender<(Updates, DatasourceId)>,
+        cancellation_token: CancellationToken,
+        metrics: Arc<MetricsCollection>,
+        reconnection_notifier: tokio::sync::mpsc::Sender<()>,
+    ) -> IndexerResult<()> {
+        // Setup WebSocket client with auto-reconnect
+        let mut client = self.setup_websocket_client().await;
+
+        // Setup connection change handler for reconnection tracking
+        Self::setup_connection_handler(&mut client, metrics.clone(), reconnection_notifier).await;
+
+        // Connect the WebSocket and enable keep-alive
+        Self::connect_websocket(&mut client, &metrics).await?;
+
+        // Subscribe to all event types
+        Self::subscribe_reapplied_transactions(
+            &mut client,
+            sender.clone(),
+            self.id.clone(),
+            metrics.clone(),
+        )
+        .await?;
+
+        Self::subscribe_rolledback_transactions(
+            &mut client,
+            sender.clone(),
+            self.id.clone(),
+            metrics.clone(),
+        )
+        .await?;
+
+        Self::subscribe_block_events(
+            &mut client,
+            sender.clone(),
+            self.id.clone(),
+            metrics.clone(),
+            self.rpc_client.clone(),
+        )
+        .await?;
+
+        Self::subscribe_account_updates(
+            &mut client,
+            sender,
+            self.id.clone(),
+            metrics.clone(),
+            self.rpc_client.clone(),
+        )
+        .await?;
+
+        // Wait for cancellation signal and cleanup
+        Self::wait_for_cancellation(&mut client, cancellation_token, &metrics).await;
 
         Ok(())
     }
@@ -334,8 +431,10 @@ impl Datasource for ArchLiveDatasource {
         cancellation_token: CancellationToken,
         metrics: Arc<MetricsCollection>,
     ) -> IndexerResult<()> {
+        // Create a dummy reconnection notifier channel (not used in direct Datasource usage)
+        let (_reconnect_tx, _reconnect_rx) = tokio::sync::mpsc::channel::<()>(1);
         // Start live consumption from height 0 (let downstream filtering handle cutoff if any)
-        self.consume_live(0, sender, cancellation_token, metrics)
+        self.consume_live(0, sender, cancellation_token, metrics, _reconnect_tx)
             .await
     }
 
