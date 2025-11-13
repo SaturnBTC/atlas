@@ -84,5 +84,3 @@ pub struct InitPoolParams {
 pub struct OpenPositionParams {
     pub size: u64,
 }
-
-

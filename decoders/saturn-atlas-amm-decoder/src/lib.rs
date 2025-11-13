@@ -7,5 +7,3 @@ pub use instructions::{
     SaturnAmmInstruction, SaturnAmmInstructionCollection, SaturnAmmInstructionDecoder,
     SaturnAmmIxType,
 };
-
-

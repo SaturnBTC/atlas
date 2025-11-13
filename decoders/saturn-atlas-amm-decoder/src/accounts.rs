@@ -94,5 +94,3 @@ impl<'a> AccountDecoder<'a> for SaturnAmmAccountDecoder {
         None
     }
 }
-
-

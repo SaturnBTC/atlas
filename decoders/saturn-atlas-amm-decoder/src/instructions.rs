@@ -113,5 +113,3 @@ impl InstructionDecoderCollection for SaturnAmmInstructionCollection {
         }
     }
 }
-
-
